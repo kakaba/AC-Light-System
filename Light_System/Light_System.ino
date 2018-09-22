@@ -1,4 +1,4 @@
-// Day & Night System
+// AC Light System
 
 #include <Keypad.h>
 #include <LiquidCrystal.h>
