@@ -22,8 +22,8 @@ char hexaKeys[ROWS][COLS] = {
   {'*', '0', '#', 'D'}
 };
 
-byte rowPins[ROWS] = {5, 4, 10, 11}; //connect to the row pinouts of the keypad
-byte colPins[COLS] = {9, 8, 7, 6}; //connect to the column pinouts of the keypad
+byte rowPins[ROWS] = {9, 8, 7, 6}; //connect to the row pinouts of the keypad
+byte colPins[COLS] = {5, 4, 10, 11}; //connect to the column pinouts of the keypad
 
 //initialize an instance of class NewKeypad
 Keypad customKeypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
@@ -52,6 +52,7 @@ char key;
 
 unsigned int holdTime = 1000;
 unsigned int debounce = 10;
+unsigned long acDelay = 8500;
 
 
 int powerMax = 0;
@@ -104,7 +105,7 @@ void setup() {
 
   customKeypad.setHoldTime( holdTime );
   customKeypad.setDebounceTime( debounce );
-  customKeypad.addEventListener(keypadEvent);
+  customKeypad.addEventListener( keypadEvent );
 
   bootup();
 
@@ -127,7 +128,7 @@ void loop() {
   // put your main code here, to run repeatedly:
 
 
-  if ( onStatus == 1 && currentMillis1 + 180000 < millis() ) {
+  if ( onStatus == 1 && currentMillis1 + 60000 < millis() ) {
 
     currentMillis1 = millis();
 
@@ -142,21 +143,21 @@ void loop() {
 
 
 
-    if ( setMillis > dayNightIntervalOn && setMillis < ( dayNightIntervalOn + 3600000 ) ) {
+    if ( setMillis > dayNightIntervalOn && setMillis < ( dayNightIntervalOn + 600000 ) ) {
 
       currentMillis = millis();
       currentMillis1 = millis();
-      power = 8000;
+      power = acDelay;
       while ( currentMillis + minMax > millis() ) {
         if ( currentMillis1 + 5 < millis() ) {
           currentMillis1 = millis();
-          power = map(  millis() , currentMillis , currentMillis + minMax , 8000 , powerMax );
+          power = map(  millis() , currentMillis , currentMillis + minMax , acDelay , powerMax );
         }
         if ( power < 0 ) {
           power = 0;
         }
-        if ( power > 8000 ) {
-          power = 8000;
+        if ( power > acDelay ) {
+          power = acDelay;
         }
         powerAc ( power );
       }
@@ -166,8 +167,8 @@ void loop() {
       if ( power < 0 ) {
         power = 0;
       }
-      if ( power > 8000 ) {
-        power = 8000;
+      if ( power > acDelay ) {
+        power = acDelay;
       }
       while ( ( currentMillis + ( ((dayNightIntervalOff - dayNightIntervalOn) - minMax) - maxMin )) > millis() ) {
         powerAc( power );
@@ -178,13 +179,13 @@ void loop() {
       while ( currentMillis + maxMin > millis() ) {
         if ( currentMillis1 + 5 < millis() ) {
           currentMillis1 = millis();
-          power = map(  millis() , currentMillis , currentMillis + minMax , powerMax , 8000 );
+          power = map(  millis() , currentMillis , currentMillis + minMax , powerMax , acDelay );
         }
         if ( power < 0 ) {
           power = 0;
         }
-        if ( power > 8000 ) {
-          power = 8000;
+        if ( power > acDelay ) {
+          power = acDelay;
         }
         powerAc ( power );
       }
@@ -209,19 +210,19 @@ void loop() {
 
   else if ( onStatus == 2 ) {
 
-    power = 8000;
+    power = acDelay;
     currentMillis = millis();
     currentMillis1 = millis();
     while ( currentMillis + minMax > millis() ) {
       if ( currentMillis1 + 5 < millis() ) {
         currentMillis1 = millis();
-        power = map(  millis() , currentMillis , currentMillis + minMax , 8000 , powerMax );
+        power = map(  millis() , currentMillis , currentMillis + minMax , acDelay , powerMax );
       }
       if ( power < 0 ) {
         power = 0;
       }
-      if ( power > 8000 ) {
-        power = 8000;
+      if ( power > acDelay ) {
+        power = acDelay;
       }
       powerAc ( power );
     }
@@ -231,8 +232,8 @@ void loop() {
     if ( power < 0 ) {
       power = 0;
     }
-    if ( power > 8000 ) {
-      power = 8000;
+    if ( power > acDelay ) {
+      power = acDelay;
     }
     while ( ( currentMillis + ( (personalIntervalOn - minMax) - maxMin )) > millis() ) {
       powerAc( power );
@@ -243,13 +244,13 @@ void loop() {
     while ( currentMillis + maxMin > millis() ) {
       if ( currentMillis1 + 5 < millis() ) {
         currentMillis1 = millis();
-        power = map(  millis() , currentMillis , currentMillis + minMax , powerMax , 8000 );
+        power = map(  millis() , currentMillis , currentMillis + minMax , powerMax , acDelay );
       }
       if ( power < 0 ) {
         power = 0;
       }
-      if ( power > 8000 ) {
-        power = 8000;
+      if ( power > acDelay ) {
+        power = acDelay;
       }
       powerAc ( power );
     }
@@ -302,7 +303,7 @@ void bootup() {
     powerMax = 50 ;
   }
   displayPower = powerMax;
-  powerMax = map( powerMax , 0 , 100 , 8000 , 0 );
+  powerMax = map( powerMax , 0 , 100 , acDelay , 0 );
 
   minMax = (EEPROMReadint(2) * 60000);
 
@@ -327,7 +328,7 @@ void bootup() {
   if ( personalIntervalOff  < 600000 || personalIntervalOff  > 86400000 ) {
     personalIntervalOff  = 600000;
   }
-  if ( personalIntervalOn  <  (minMax + maxMin) ) {
+  if ( personalIntervalOn  <=  (minMax + maxMin) ) {
     personalIntervalOn  = minMax + maxMin + 600000;
   }
 
