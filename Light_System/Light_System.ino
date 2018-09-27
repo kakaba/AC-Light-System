@@ -22,8 +22,8 @@ char hexaKeys[ROWS][COLS] = {
   {'*', '0', '#', 'D'}
 };
 
-byte rowPins[ROWS] = {9, 8, 7, 6}; //connect to the row pinouts of the keypad
-byte colPins[COLS] = {5, 4, 10, 11}; //connect to the column pinouts of the keypad
+byte rowPins[ROWS] = {5, 4, 10, 11}; //connect to the row pinouts of the keypad
+byte colPins[COLS] = {9, 8, 7, 6}; //connect to the column pinouts of the keypad
 
 //initialize an instance of class NewKeypad
 Keypad customKeypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
@@ -140,18 +140,12 @@ void loop() {
 
     currentMillis1 = millis();
 
-    auto date = Rtc.GetDateTime();
-    printDateTime(date);
-    String str1 = val.substring( 0 , 2 );
-    int n = str1.toInt();
-    String str2 = val.substring( 3 , 5 );
-    int m = str2.toInt();
-    long setMillis = ( n * 3600000 ) + ( m * 60000 );
-    Serial.println(setMillis);
+
+    long realTime = timeFromRTC();
 
 
 
-    if ( setMillis > dayNightIntervalOn && setMillis < ( dayNightIntervalOff + minMax + maxMin ) ) {
+    if ( realTime > dayNightIntervalOn && realTime < ( dayNightIntervalOff - minMax - maxMin ) ) {
 
       currentMillis = millis();
       currentMillis1 = millis();
@@ -170,6 +164,7 @@ void loop() {
         powerAc ( power );
       }
 
+      realTime = timeFromRTC();
       currentMillis = millis();
       power = powerMax;
       if ( power < 0 ) {
@@ -178,7 +173,7 @@ void loop() {
       if ( power > acDelay ) {
         power = acDelay;
       }
-      while ( ( currentMillis + ( ((dayNightIntervalOff - dayNightIntervalOn) - minMax) - maxMin )) > millis() ) {
+      while (  currentMillis + ( dayNightIntervalOff - realTime - maxMin - minMax )  > millis() ) {
         powerAc( power );
       }
 
@@ -282,9 +277,9 @@ void ISR_pulse() {
 
 void powerAc( int x ) {
   if ( acStatus ) {
-//    if ( micros() < 4294937295 ) {
-      timerPulse = micros();
-//    }
+    //    if ( micros() < 4294937295 ) {
+    timerPulse = micros();
+    //    }
     acStatus = 0;
     flag = 1;
   }
@@ -302,6 +297,17 @@ void powerAc( int x ) {
 
 }
 
+long timeFromRTC() {
+  auto date = Rtc.GetDateTime();
+  printDateTime(date);
+  String str1 = val.substring( 0 , 2 );
+  int n = str1.toInt();
+  String str2 = val.substring( 3 , 5 );
+  int m = str2.toInt();
+  long setMillis = ( n * 3600000 ) + ( m * 60000 );
+
+  return setMillis;
+}
 
 void bootup() {
 
