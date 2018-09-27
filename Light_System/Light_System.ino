@@ -63,6 +63,8 @@ unsigned long personalIntervalOff = 0;
 unsigned long dayNightIntervalOn = 0;
 unsigned long dayNightIntervalOff = 0;
 
+extern volatile unsigned long timer0_millis;
+
 unsigned long currentMillis = 0;
 long currentMillis1 = 0;
 int power = 0;
@@ -127,6 +129,12 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
+  if ( millis() > 2592000000 ) {
+    setMillis( 0 );
+    currentMillis = millis();
+    currentMillis1 = millis();
+  }
+
 
   if ( onStatus == 1 && currentMillis1 + 60000 < millis() ) {
 
@@ -143,7 +151,7 @@ void loop() {
 
 
 
-    if ( setMillis > dayNightIntervalOn && setMillis < ( dayNightIntervalOn + 600000 ) ) {
+    if ( setMillis > dayNightIntervalOn && setMillis < ( dayNightIntervalOff + minMax + maxMin ) ) {
 
       currentMillis = millis();
       currentMillis1 = millis();
@@ -274,9 +282,9 @@ void ISR_pulse() {
 
 void powerAc( int x ) {
   if ( acStatus ) {
-    if ( micros() < 4294937295 ) {
+//    if ( micros() < 4294937295 ) {
       timerPulse = micros();
-    }
+//    }
     acStatus = 0;
     flag = 1;
   }
@@ -350,6 +358,18 @@ void bootup() {
   }
 
 }
+
+void setMillis ( unsigned long value ) {
+  uint8_t oldSREG = SREG;
+
+  cli();
+
+  timer0_millis = value;
+
+  SREG = oldSREG;
+
+}
+
 
 void keypadEvent(KeypadEvent key) {
   switch (customKeypad.getState()) {
